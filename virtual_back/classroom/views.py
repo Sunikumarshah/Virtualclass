@@ -1,19 +1,16 @@
 from django.shortcuts import render
-from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status, permissions, viewsets, serializers
+from rest_framework import status
 from django.contrib.auth.models import User, Group
-from .models import Class, Enrollment
-# from .serializers import ClassSerializer, EnrollmentSerializer
-from .models import Session, Comment
-from .serializers import GroupSerializer, UserSerializer,RegisterSerializer,ChangePasswordSerialize
-
-
-
-
-
-# views.py
+from .models import Class, Enrollment, Session, Comment
+from .serializers import (
+    GroupSerializer, 
+    UserSerializer, 
+    RegisterSerializer, 
+    ChangePasswordSerializer, 
+    EnrollmentSerializer  # Import EnrollmentSerializer from serializers.py
+)
 
 
 @api_view(['GET'])
@@ -21,17 +18,13 @@ def check_enrollment(request, class_id):
     user = request.user
     try:
         classroom = Class.objects.get(id=class_id)
-        if Enrollment.objects.filter(student=user, classroom=classroom).exists():
+        if Enrollment.objects.filter(student=user, class_obj=classroom).exists():
             return Response({"message": "Enrolled"}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "Not Enrolled"}, status=status.HTTP_403_FORBIDDEN)
     except Class.DoesNotExist:
         return Response({"error": "Class not found"}, status=status.HTTP_404_NOT_FOUND)
-
-class EnrollmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Enrollment
-        fields = ['student', 'classroom']
+    
 @api_view(['POST'])
 def enroll_in_class(request, class_id):
     user = request.user
@@ -41,7 +34,7 @@ def enroll_in_class(request, class_id):
         return Response({"message": "Successfully enrolled"}, status=status.HTTP_201_CREATED)
     except Class.DoesNotExist:
         return Response({"error": "Class not found"}, status=status.HTTP_404_NOT_FOUND)
-# views.py
+
 
 @api_view(['GET'])
 def get_class_content(request, class_id):
@@ -72,6 +65,7 @@ def get_user_classes(request):
         return Response(class_data, status=200)
     return Response({"error": "Not authenticated"}, status=403)
 
+
 @api_view(['GET'])
 def get_upcoming_sessions(request):
     user = request.user
@@ -84,6 +78,7 @@ def get_upcoming_sessions(request):
         
         return Response(session_data, status=200)
     return Response({"error": "Not authenticated"}, status=403)
+
 
 @api_view(['GET'])
 def get_recent_activities(request):
